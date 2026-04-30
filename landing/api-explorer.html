@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDEN API 解读 · API Explorer</title>
+<meta name="description" content="Friendly walkthrough of TDEN's three public API endpoints: OIDC Discovery, JWKS, Scene Packages.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box }
+  :root {
+    --bg-0:#060A18; --bg-1:#0A0E27; --bg-2:#0F1535;
+    --fg-0:#F3F4F6; --fg-1:#E5E7EB; --fg-2:#D1D5DB; --fg-3:#9CA3AF; --fg-4:#6B7280;
+    --pri:#4F8EFF; --pur:#A855F7; --cyn:#06B6D4; --grn:#10B981; --amb:#F59E0B;
+    --br:rgba(255,255,255,0.10); --br2:rgba(255,255,255,0.18);
+    --card:rgba(255,255,255,0.04); --card-h:rgba(255,255,255,0.07);
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:linear-gradient(135deg,var(--bg-0) 0%,var(--bg-1) 50%,var(--bg-2) 100%);
+    background-attachment:fixed;
+    color:var(--fg-1); min-height:100vh; line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a { color:var(--pri); text-decoration:none }
+  a:hover { color:#7DAEFF; text-decoration:underline }
+  code, .mono { font-family:Consolas,Monaco,"Courier New",monospace }
+  code { background:rgba(255,255,255,0.06); padding:1px 6px; border-radius:4px; font-size:0.93em }
+
+  .wrap { max-width:1000px; margin:0 auto; padding:48px 24px 96px }
+
+  header { margin-bottom:48px }
+  .back {
+    display:inline-flex; align-items:center; gap:6px;
+    color:var(--fg-3); font-size:13px; margin-bottom:24px;
+    transition:color 0.15s;
+  }
+  .back:hover { color:var(--fg-1); text-decoration:none }
+  .title-zh { font-size:36px; font-weight:800; color:var(--fg-0);
+              background:linear-gradient(120deg,var(--pri) 0%,var(--pur) 100%);
+              -webkit-background-clip:text; background-clip:text;
+              -webkit-text-fill-color:transparent;
+              margin-bottom:6px; line-height:1.2 }
+  .title-en { font-size:14px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.10em }
+  .lede { font-size:16px; color:var(--fg-2); margin-top:24px; max-width:800px }
+  .lede-en { font-size:13px; color:var(--fg-4); margin-top:6px; max-width:800px }
+
+  section {
+    margin:48px 0;
+    background:var(--card); border:1px solid var(--br); border-radius:12px;
+    padding:28px 28px 24px;
+  }
+  section h2 {
+    font-size:22px; color:var(--fg-0); font-weight:700;
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:6px;
+  }
+  section h2 .emoji { font-size:22px }
+  section .h2-en { font-size:13px; color:var(--fg-4); margin-bottom:8px; font-style:italic }
+  section .endpoint {
+    font-size:12px; color:var(--pri);
+    background:rgba(79,142,255,0.08);
+    border:1px solid rgba(79,142,255,0.20);
+    padding:6px 12px; border-radius:6px; display:inline-block;
+    margin:8px 0 20px;
+  }
+  section .endpoint code { background:transparent; color:var(--pri); padding:0 }
+
+  section .summary { color:var(--fg-2); margin-bottom:18px; font-size:14px }
+  section .summary-en { color:var(--fg-4); margin-bottom:18px; font-size:12px; font-style:italic }
+
+  /* Field table */
+  .field {
+    padding:14px 0;
+    border-bottom:1px dashed var(--br);
+    display:grid; grid-template-columns:200px 1fr; gap:16px;
+    align-items:start;
+  }
+  .field:last-child { border-bottom:none }
+  .field .key {
+    font-family:Consolas,Monaco,"Courier New",monospace;
+    font-size:13px; color:var(--cyn); font-weight:600;
+    word-break:break-all;
+  }
+  .field .meaning { font-size:13px; color:var(--fg-1); line-height:1.6 }
+  .field .meaning .en { color:var(--fg-4); font-size:12px; font-style:italic; display:block; margin-top:3px }
+  .field .value {
+    margin-top:6px; font-family:Consolas,Monaco,"Courier New",monospace;
+    font-size:11px; color:var(--fg-3); word-break:break-all;
+    background:rgba(0,0,0,0.20); padding:6px 8px; border-radius:4px;
+  }
+  .field .value.array { color:var(--amb) }
+
+  .raw-link {
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:8px; font-size:12px;
+    padding:6px 12px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--br); border-radius:6px;
+    color:var(--fg-3);
+  }
+  .raw-link:hover { background:var(--card-h); color:var(--fg-1); text-decoration:none }
+
+  .loading { color:var(--fg-4); font-style:italic; padding:16px 0 }
+  .error { color:#EF4444; padding:8px 12px; background:rgba(239,68,68,0.1); border-radius:6px; border:1px solid rgba(239,68,68,0.3) }
+
+  /* Scene package card list */
+  .pkg-card {
+    margin:14px 0; padding:14px 16px;
+    background:rgba(0,0,0,0.20); border:1px solid var(--br);
+    border-radius:8px;
+  }
+  .pkg-card .pkg-name { color:var(--fg-0); font-weight:600; font-size:15px }
+  .pkg-card .pkg-id { color:var(--fg-4); font-size:11px; font-family:Consolas,Monaco,"Courier New",monospace }
+  .pkg-card .pkg-desc { color:var(--fg-2); font-size:13px; margin:8px 0 4px }
+  .pkg-card .pkg-fields { color:var(--cyn); font-size:11px; font-family:Consolas,Monaco,"Courier New",monospace }
+  .pkg-card .pkg-status {
+    display:inline-block; margin-top:4px;
+    padding:1px 8px; border-radius:999px;
+    font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .pkg-card .pkg-status.approved { background:rgba(16,185,129,0.15); color:var(--grn) }
+  .pkg-card .pkg-status.pending { background:rgba(245,158,11,0.15); color:var(--amb) }
+
+  @media (max-width:640px) {
+    .field { grid-template-columns:1fr }
+    .field .key { font-size:14px }
+    .title-zh { font-size:28px }
+    .wrap { padding:32px 16px 64px }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="back" href="/">← 返回首页 / Back to home</a>
+  <h1 class="title-zh">API 解读</h1>
+  <div class="title-en">TDEN Public API Explorer</div>
+
+  <p class="lede">
+    TDEN 网关对外暴露 3 个标准 API。本页把每个端点的 JSON 用人话翻译一遍,**配中英对照解释每个字段是干嘛的**,
+    底下保留"查看原始 JSON"链接,方便开发者直接复制使用。
+  </p>
+  <p class="lede-en">
+    TDEN gateway exposes three public APIs. This page renders each one with plain-language field-level annotations
+    in Chinese + English. Raw JSON link preserved at the bottom of each section for developer copy-paste.
+  </p>
+</header>
+
+<!-- ── 1. OIDC Discovery ───────────────────────────────────────────────── -->
+<section>
+  <h2><span class="emoji">📡</span> OIDC 发现端点 / OIDC Discovery</h2>
+  <div class="h2-en">RFC 8414 standard endpoint — third-party OAuth clients fetch this once at startup</div>
+
+  <div class="endpoint"><code>GET https://gateway.tden.network/.well-known/openid-configuration</code></div>
+
+  <p class="summary">
+    第三方应用想做"用 TDEN 登录"时,客户端库(比如 @tden/sdk)第一步就拉这个 JSON,
+    从里面读出 authorize / token / userinfo 各端点 URL,以及网关支持哪些算法、哪些 scope。
+    这是 OIDC 协议规定的"自动发现"机制。
+  </p>
+  <p class="summary-en">
+    First call any OIDC client makes — discovers all the endpoint URLs, supported algorithms, and available scopes
+    so it doesn't need to hard-code them. Standard OAuth 2 / OIDC behavior.
+  </p>
+
+  <div id="discovery-out" class="loading">加载中… / Loading…</div>
+
+  <a class="raw-link" href="https://gateway.tden.network/.well-known/openid-configuration" target="_blank">
+    📄 查看原始 JSON / View raw JSON →
+  </a>
+</section>
+
+<!-- ── 2. JWKS ─────────────────────────────────────────────────────────── -->
+<section>
+  <h2><span class="emoji">🔑</span> 公钥集合 / JWKS</h2>
+  <div class="h2-en">Ed25519 public keys for verifying ID tokens and access receipts</div>
+
+  <div class="endpoint"><code>GET https://gateway.tden.network/oauth/jwks</code></div>
+
+  <p class="summary">
+    网关用 Ed25519 私钥签 ID Token 和访问回执;**任何人都能拉这里的公钥独立验签**。
+    这是"用户主权审计"能成立的底层 ── 浏览器、Go SDK、JS SDK 都用这一份公钥验。
+  </p>
+  <p class="summary-en">
+    The gateway signs ID tokens and access receipts with its Ed25519 private key. Anyone can fetch these public
+    keys to verify signatures independently — browsers, Go SDK, JS SDK all use this same set.
+  </p>
+
+  <div id="jwks-out" class="loading">加载中… / Loading…</div>
+
+  <a class="raw-link" href="https://gateway.tden.network/oauth/jwks" target="_blank">
+    📄 查看原始 JSON / View raw JSON →
+  </a>
+</section>
+
+<!-- ── 3. Scene Packages ───────────────────────────────────────────────── -->
+<section>
+  <h2><span class="emoji">📦</span> 已批准场景包列表 / Approved Scene Packages</h2>
+  <div class="h2-en">All scene packages reviewers have approved — third parties can request these via OIDC scope</div>
+
+  <div class="endpoint"><code>GET https://gateway.tden.network/api/scenepackages</code></div>
+
+  <p class="summary">
+    "场景包"是 TDEN 把 OIDC scope 升级为<b>多字段 + 用途声明 + 敏感度自动检测 + 链上审批</b>的结构。
+    每个包描述一类查询场景(KYC、年龄验证、电商发货…);用户授权时按包整体同意。
+    被审核员审核通过的就出现在这里,可被任何第三方 RP 引用。
+  </p>
+  <p class="summary-en">
+    "Scene package" is TDEN's evolution of OIDC scopes — instead of opaque scope strings, each package
+    declares concrete fields, purpose, sensitivity tier, and the user consents per-package.
+    Approved packages here can be referenced by any third-party RP.
+  </p>
+
+  <div id="pkgs-out" class="loading">加载中… / Loading…</div>
+
+  <a class="raw-link" href="https://gateway.tden.network/api/scenepackages" target="_blank">
+    📄 查看原始 JSON / View raw JSON →
+  </a>
+</section>
+
+<footer style="margin-top:64px; padding-top:24px; border-top:1px solid var(--br); color:var(--fg-4); font-size:13px">
+  <p>TDEN © 2026 · 福清市聪敏技术创新有限公司 · AGPL v3</p>
+  <p style="margin-top:8px"><a href="/">← 回首页 / Back to home</a></p>
+</footer>
+
+</div>
+
+<script>
+(async () => {
+  const GW = 'https://gateway.tden.network';
+
+  // ── Field annotations ───────────────────────────────────────────────────
+  const DISCOVERY_FIELDS = {
+    issuer: { zh: '颁发者地址 ── ID Token 里 iss 字段必须等于此值', en: 'Token issuer URL — must match iss claim' },
+    authorization_endpoint: { zh: '授权端点 ── 用户跳到这里同意授权', en: 'Where users land to consent' },
+    token_endpoint: { zh: 'Token 端点 ── RP 用 code 换 access_token + id_token', en: 'RP exchanges authorization code for tokens' },
+    userinfo_endpoint: { zh: 'UserInfo 端点 ── 拿 access_token 查用户信息', en: 'Fetch user claims with access_token' },
+    jwks_uri: { zh: '公钥地址 ── ID Token 验签用', en: 'Public-key set for verifying ID tokens' },
+    response_types_supported: { zh: '支持的响应类型 ── 只支持 code(授权码模式)', en: 'Only authorization code flow supported' },
+    grant_types_supported: { zh: '支持的授权类型 ── 同上,授权码', en: 'Authorization code grant only' },
+    subject_types_supported: { zh: 'sub 字段类型 ── public 表示同一用户对所有 RP 是同一个 sub', en: 'public = same sub across all RPs' },
+    id_token_signing_alg_values_supported: { zh: 'ID Token 签名算法 ── 只用 EdDSA(Ed25519)', en: 'EdDSA (Ed25519) only — modern + small' },
+    scopes_supported: { zh: '支持的 scope ── 包括 OIDC 标准 + 已批准的场景包 ID', en: 'Standard OIDC scopes + approved scene-package IDs' },
+    claims_supported: { zh: 'UserInfo 可返回的字段 ── 标准 + tden:* 自定义命名空间', en: 'Standard claims + tden:* custom namespace' },
+    code_challenge_methods_supported: { zh: 'PKCE 算法 ── 只支持 S256(SHA-256),反 code 截获', en: 'PKCE only — S256 (SHA-256), prevents code interception' },
+    token_endpoint_auth_methods_supported: { zh: 'Token 端点鉴权方式 ── none(公共客户端 + PKCE)或 client_secret_post', en: 'none (public + PKCE) or client_secret_post' },
+  };
+
+  const JWK_FIELDS = {
+    kty: { zh: '密钥类型 ── OKP 表示 Edwards 椭圆曲线密钥', en: 'Key type — OKP = Edwards-curve' },
+    crv: { zh: '曲线 ── Ed25519', en: 'Curve — Ed25519' },
+    x: { zh: '公钥(Base64URL,32 字节)── 用此值验签', en: 'Public key (Base64URL, 32 bytes) — used for verification' },
+    use: { zh: '用途 ── sig 表示签名验证', en: 'sig = signature verification' },
+    alg: { zh: '签名算法 ── EdDSA', en: 'Signature algorithm — EdDSA' },
+    kid: { zh: '密钥 ID ── ID Token 头里 kid 字段对照,确认用哪把公钥', en: 'Key ID — token header references this to pick the right key' },
+  };
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function renderField(key, value, annot) {
+    const note = annot[key] || { zh: '(尚无注解)', en: '' };
+    const valStr = Array.isArray(value)
+      ? `[ ${value.map(v => '"' + v + '"').join(', ')} ]`
+      : (typeof value === 'string' ? '"' + value + '"' : JSON.stringify(value));
+    const valClass = Array.isArray(value) ? 'value array' : 'value';
+    return `
+      <div class="field">
+        <div class="key">${key}</div>
+        <div class="meaning">
+          ${note.zh}
+          ${note.en ? `<span class="en">${note.en}</span>` : ''}
+          <div class="${valClass}">${valStr}</div>
+        </div>
+      </div>`;
+  }
+
+  function showError(elId, e) {
+    document.getElementById(elId).innerHTML =
+      '<div class="error">⚠ 加载失败 / Failed: ' + (e.message || e) + '</div>';
+  }
+
+  // ── 1. Discovery ─────────────────────────────────────────────────────────
+  try {
+    const r = await fetch(GW + '/.well-known/openid-configuration');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const html = Object.keys(j).sort().map(k => renderField(k, j[k], DISCOVERY_FIELDS)).join('');
+    document.getElementById('discovery-out').innerHTML = html;
+    document.getElementById('discovery-out').classList.remove('loading');
+  } catch (e) { showError('discovery-out', e) }
+
+  // ── 2. JWKS ──────────────────────────────────────────────────────────────
+  try {
+    const r = await fetch(GW + '/oauth/jwks');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    let html = '<p style="color:var(--fg-3); font-size:13px; margin-bottom:14px">'
+             + '当前共 <b>' + j.keys.length + '</b> 把公钥(同时多把表示在做密钥轮换)。'
+             + ' / <i>' + j.keys.length + ' active key(s).</i></p>';
+    j.keys.forEach((k, i) => {
+      html += '<div style="margin-top:14px; padding:12px 14px; background:rgba(0,0,0,0.20); border-radius:6px">';
+      html += '<div style="color:var(--cyn); font-size:11px; font-family:Consolas,monospace; margin-bottom:8px">Key #' + (i+1) + '</div>';
+      html += Object.keys(k).map(key => renderField(key, k[key], JWK_FIELDS)).join('');
+      html += '</div>';
+    });
+    document.getElementById('jwks-out').innerHTML = html;
+    document.getElementById('jwks-out').classList.remove('loading');
+  } catch (e) { showError('jwks-out', e) }
+
+  // ── 3. Scene Packages ────────────────────────────────────────────────────
+  try {
+    const r = await fetch(GW + '/api/scenepackages');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const pkgs = j.packages || [];
+    let html = '<p style="color:var(--fg-3); font-size:13px; margin-bottom:14px">'
+             + '当前共 <b>' + j.count + '</b> 个已批准场景包。'
+             + ' / <i>' + j.count + ' approved package(s).</i></p>';
+    if (pkgs.length === 0) {
+      html += '<p style="color:var(--fg-4); font-style:italic">暂无 / None yet.</p>';
+    } else {
+      pkgs.forEach(p => {
+        const fields = (p.fields || []).map(f => f.tag || f).join(', ');
+        const status = p.status || p.review_status || 'unknown';
+        const sclass = status === 'approved' ? 'approved' : 'pending';
+        html += `
+          <div class="pkg-card">
+            <div class="pkg-name">${p.package_name || p.name || p.package_id}</div>
+            <div class="pkg-id">${p.package_id} · v${p.version || '?'} · ${p.institution_type || 'UNKNOWN'}</div>
+            ${p.description || p.purpose ? `<div class="pkg-desc">${p.description || p.purpose}</div>` : ''}
+            ${fields ? `<div class="pkg-fields">字段 / fields: ${fields}</div>` : ''}
+            <span class="pkg-status ${sclass}">${status}</span>
+          </div>`;
+      });
+    }
+    document.getElementById('pkgs-out').innerHTML = html;
+    document.getElementById('pkgs-out').classList.remove('loading');
+  } catch (e) { showError('pkgs-out', e) }
+})();
+</script>
+
+</body>
+</html>

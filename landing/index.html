@@ -255,47 +255,20 @@
       <div class="url">tden.network/app/oidc-test</div>
     </a>
 
-    <a class="card" href="https://gateway.tden.network/.well-known/openid-configuration">
-      <span class="pill gray">API · Discovery</span>
+    <a class="card" href="/api-explorer.html">
+      <span class="pill gray">Friendly view of 3 APIs</span>
       <div class="icon">📡</div>
-      <div class="title-zh">OIDC Discovery</div>
-      <div class="title-en">/.well-known/openid-configuration</div>
+      <div class="title-zh">API 解读 / API Explorer</div>
+      <div class="title-en">OIDC Discovery + JWKS + Scene Packages</div>
       <div class="desc-zh">
-        OIDC 标准发现端点,列出 issuer、authorize / token / userinfo / jwks 等所有路径。
+        把网关三个 API 端点的 JSON 用人话翻译 ── <b>逐字段中英对照解释</b>。
+        每段底下保留"查看原始 JSON"链接给开发者直接拷贝。
       </div>
       <div class="desc-en">
-        Standard OIDC discovery endpoint listing issuer + all auth flow URIs.
+        Renders the three public APIs (Discovery / JWKS / Scene Packages) with
+        field-level annotations. Raw-JSON link preserved per section.
       </div>
-      <div class="url">gateway.tden.network/.well-known/openid-configuration</div>
-    </a>
-
-    <a class="card" href="https://gateway.tden.network/oauth/jwks">
-      <span class="pill gray">API · JWKS</span>
-      <div class="icon">🔑</div>
-      <div class="title-zh">公钥集合 / JWKS</div>
-      <div class="title-en">/oauth/jwks</div>
-      <div class="desc-zh">
-        网关 Ed25519 签名公钥(JWK 格式),用于验证 ID Token 和访问回执。
-      </div>
-      <div class="desc-en">
-        Gateway's Ed25519 signing public keys (JWK format) — used to verify
-        ID tokens and access receipts.
-      </div>
-      <div class="url">gateway.tden.network/oauth/jwks</div>
-    </a>
-
-    <a class="card" href="https://gateway.tden.network/api/scenepackages">
-      <span class="pill gray">API · Packages</span>
-      <div class="icon">📦</div>
-      <div class="title-zh">已批准场景包列表</div>
-      <div class="title-en">/api/scenepackages</div>
-      <div class="desc-zh">
-        所有审核通过、可被第三方引用的 OIDC 场景包(JSON)。
-      </div>
-      <div class="desc-en">
-        All approved scene packages available for OIDC scope reference (JSON).
-      </div>
-      <div class="url">gateway.tden.network/api/scenepackages</div>
+      <div class="url">tden.network/api-explorer.html</div>
     </a>
 
   </div>
