@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDEN — Trusted Digital Ecosystem Network · 可信数字生态网络</title>
+<meta name="description" content="TDEN — Trusted Digital Ecosystem Network. Phase A2.7 alpha. User-sovereign access receipts, OIDC-aligned scene packages, federation between Sovereign Identity Nodes.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-0:#060A18; --bg-1:#0A0E27; --bg-2:#0F1535; --bg-3:#1a1f3a;
+    --fg-0:#F3F4F6; --fg-1:#E5E7EB; --fg-2:#D1D5DB; --fg-3:#9CA3AF; --fg-4:#6B7280;
+    --pri:#4F8EFF; --pur:#A855F7; --cyn:#06B6D4; --grn:#10B981; --amb:#F59E0B; --red:#EF4444;
+    --br:rgba(255,255,255,0.10); --br2:rgba(255,255,255,0.18);
+    --card:rgba(255,255,255,0.04); --card-h:rgba(255,255,255,0.07);
+  }
+  html { scroll-behavior:smooth }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:linear-gradient(135deg,var(--bg-0) 0%,var(--bg-1) 50%,var(--bg-2) 100%);
+    background-attachment:fixed;
+    color:var(--fg-1); min-height:100vh; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a { color:inherit; text-decoration:none }
+  code { font-family:Consolas,Monaco,"Courier New",monospace; font-size:0.92em;
+         background:rgba(255,255,255,0.06); padding:1px 6px; border-radius:4px; color:var(--fg-1) }
+
+  .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 96px }
+
+  /* Header */
+  header { margin-bottom:56px }
+  .brand {
+    font-size:60px; font-weight:800; letter-spacing:-0.025em; line-height:1;
+    background:linear-gradient(120deg,var(--pri) 0%,var(--pur) 50%,var(--cyn) 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:10px;
+  }
+  .tag-zh { font-size:18px; color:var(--fg-2); margin-bottom:4px }
+  .tag-en { font-size:13px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.10em }
+  .lead {
+    font-size:20px; font-weight:300; color:var(--fg-2);
+    margin:36px 0 8px; max-width:760px;
+  }
+  .lead-en { font-size:15px; color:var(--fg-4); max-width:760px; line-height:1.5 }
+  .status {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 14px; margin-top:28px;
+    background:rgba(245,158,11,0.10);
+    border:1px solid rgba(245,158,11,0.35);
+    border-radius:999px; font-size:12px; color:var(--amb);
+    text-transform:uppercase; letter-spacing:0.06em; font-weight:600;
+  }
+  .status::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--amb); animation:pulse 2s ease-in-out infinite }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Section */
+  section { margin:64px 0 }
+  h2 {
+    font-size:13px; font-weight:700; color:var(--fg-3);
+    text-transform:uppercase; letter-spacing:0.14em;
+    margin-bottom:24px; padding-bottom:10px;
+    border-bottom:1px solid var(--br);
+    display:flex; align-items:center; gap:10px;
+  }
+  h2 .emoji { font-size:18px }
+  h2 .zh { color:var(--fg-1); text-transform:none; letter-spacing:0; font-size:22px; font-weight:600; margin-right:8px }
+  h2 .en { color:var(--fg-4); text-transform:none; letter-spacing:0; font-size:13px; font-weight:400 }
+
+  /* Grid of cards */
+  .grid { display:grid; gap:14px }
+  .grid-4 { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)) }
+  .grid-5 { grid-template-columns:repeat(auto-fit,minmax(200px,1fr)) }
+  .grid-2 { grid-template-columns:repeat(auto-fit,minmax(360px,1fr)) }
+
+  .card {
+    background:var(--card); border:1px solid var(--br);
+    border-radius:12px; padding:18px 20px;
+    transition:border-color 0.18s, transform 0.18s, background 0.18s;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  a.card:hover { border-color:var(--br2); background:var(--card-h); transform:translateY(-2px) }
+  .card .icon { font-size:28px; line-height:1 }
+  .card .title-zh { font-size:16px; font-weight:600; color:var(--fg-0) }
+  .card .title-en { font-size:12px; color:var(--fg-4); margin-top:-4px }
+  .card .desc-zh { font-size:13px; color:var(--fg-3); line-height:1.5 }
+  .card .desc-en { font-size:12px; color:var(--fg-4); line-height:1.4 }
+  .card .url {
+    margin-top:auto; font-size:11px; color:var(--pri);
+    font-family:Consolas,Monaco,"Courier New",monospace; word-break:break-all;
+  }
+  .card .pill {
+    display:inline-flex; align-items:center; gap:4px;
+    background:rgba(79,142,255,0.12); color:var(--pri);
+    padding:2px 8px; border-radius:999px;
+    font-size:10px; font-weight:600; letter-spacing:0.04em;
+    text-transform:uppercase; align-self:flex-start;
+  }
+  .pill.green { background:rgba(16,185,129,0.12); color:var(--grn) }
+  .pill.purple { background:rgba(168,85,247,0.12); color:var(--pur) }
+  .pill.cyan { background:rgba(6,182,212,0.12); color:var(--cyn) }
+  .pill.amber { background:rgba(245,158,11,0.12); color:var(--amb) }
+  .pill.gray { background:rgba(107,114,128,0.18); color:var(--fg-3) }
+
+  /* Mobile/Desktop info card (no click-launch) */
+  .info-card {
+    background:var(--card); border:1px solid var(--br);
+    border-radius:12px; padding:18px 20px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .info-card .repo-link {
+    margin-top:8px; font-size:12px; color:var(--pri);
+    font-family:Consolas,Monaco,"Courier New",monospace;
+    border-top:1px dashed var(--br); padding-top:8px;
+  }
+  .info-card .repo-link:hover { color:#7DAEFF; text-decoration:underline }
+
+  /* SVG diagram styling */
+  .diagram-wrap {
+    background:var(--card); border:1px solid var(--br);
+    border-radius:12px; padding:24px; overflow-x:auto;
+  }
+  .diagram-wrap svg { display:block; margin:0 auto; max-width:100%; height:auto }
+  .diagram-caption {
+    margin-top:16px; padding-top:16px;
+    border-top:1px dashed var(--br);
+    font-size:13px; color:var(--fg-3); line-height:1.6;
+  }
+  .diagram-caption b { color:var(--fg-1) }
+
+  /* Repos table */
+  .repos { display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)) }
+  .repo {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px;
+    background:var(--card); border:1px solid var(--br);
+    border-radius:8px; font-size:13px;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .repo:hover { border-color:var(--br2); background:var(--card-h) }
+  .repo .name { font-family:Consolas,Monaco,"Courier New",monospace; color:var(--fg-1); font-weight:600 }
+  .repo .what { color:var(--fg-4); font-size:11px; margin-left:auto }
+
+  /* Footer */
+  footer {
+    margin-top:80px; padding-top:32px;
+    border-top:1px solid var(--br);
+    color:var(--fg-4); font-size:13px; line-height:1.7;
+  }
+  footer a { color:var(--fg-2); border-bottom:1px solid var(--br) }
+  footer a:hover { color:var(--pri) }
+
+  @media (max-width:600px) {
+    .brand { font-size:44px }
+    .lead { font-size:18px }
+    h2 .zh { font-size:18px }
+    .wrap { padding:32px 16px 64px }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── HERO ───────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="brand">TDEN</div>
+  <div class="tag-zh">可信数字生态网络</div>
+  <div class="tag-en">Trusted Digital Ecosystem Network</div>
+
+  <p class="lead">
+    让通讯更自由,但有边界。<br>
+    一个由各国主权身份节点(SIN)组成的去中心化身份基础设施,
+    把"用户主权"具体化成可在浏览器里独立验签的访问回执。
+  </p>
+  <p class="lead-en">
+    A decentralized identity infrastructure operated as a federation of national-level Sovereign Identity Nodes (SINs).
+    Every third-party data query produces an Ed25519-signed receipt the user can verify in their own browser ─
+    no need to trust the gateway's word.
+  </p>
+
+  <span class="status">Phase A2.7 alpha · 2026-04-30</span>
+</header>
+
+<!-- ── 1. WEB 入口(可点击) ─────────────────────────────────────────────────── -->
+<section>
+  <h2>
+    <span class="emoji">🌐</span>
+    <span class="zh">在线体验</span>
+    <span class="en">Live web entries — click to open</span>
+  </h2>
+
+  <div class="grid grid-4">
+
+    <a class="card" href="/app/">
+      <span class="pill green">Web App</span>
+      <div class="icon">🗺️</div>
+      <div class="title-zh">用户端 / Main App</div>
+      <div class="title-en">/app/</div>
+      <div class="desc-zh">
+        日常使用入口:邻域地图、广场、消息、身份金库、访问审计。
+        登录后五个 tab 全功能。
+      </div>
+      <div class="desc-en">
+        Daily user app — map, plaza, messages, identity vault, access receipts.
+        Five-tab parity with mobile.
+      </div>
+      <div class="url">tden.network/app/</div>
+    </a>
+
+    <a class="card" href="/portal/">
+      <span class="pill purple">Developer Portal</span>
+      <div class="icon">🚀</div>
+      <div class="title-zh">开发者门户</div>
+      <div class="title-en">/portal/</div>
+      <div class="desc-zh">
+        第三方申请 OIDC 场景包、查看审核进度、获取 client_id /
+        client_secret(批准时一次性下发)。
+      </div>
+      <div class="desc-en">
+        Third parties apply for OIDC scene packages, track review status,
+        receive client credentials on approval.
+      </div>
+      <div class="url">tden.network/portal/</div>
+    </a>
+
+    <a class="card" href="/app/access-receipts">
+      <span class="pill cyan">User Sovereignty</span>
+      <div class="icon">🔐</div>
+      <div class="title-zh">访问审计页 / Access Receipts</div>
+      <div class="title-en">/app/access-receipts</div>
+      <div class="desc-zh">
+        浏览器内用 WebCrypto 独立验签每条 Ed25519 签名访问回执。
+        登录后可见。
+      </div>
+      <div class="desc-en">
+        WebCrypto-based local verification of gateway-signed access receipts.
+        Login required.
+      </div>
+      <div class="url">tden.network/app/access-receipts</div>
+    </a>
+
+    <a class="card" href="/app/oidc-test">
+      <span class="pill amber">RP Demo</span>
+      <div class="icon">🧪</div>
+      <div class="title-zh">OIDC 测试页 / RP Demo</div>
+      <div class="title-en">/app/oidc-test</div>
+      <div class="desc-zh">
+        模拟第三方应用走完整"用 TDEN 登录"流程的演示页面,
+        展示授权同意 → 拉用户信息全过程。
+      </div>
+      <div class="desc-en">
+        Demonstrates the full Sign-in-with-TDEN OIDC flow ─ authorization,
+        consent, token exchange, userinfo.
+      </div>
+      <div class="url">tden.network/app/oidc-test</div>
+    </a>
+
+    <a class="card" href="https://gateway.tden.network/.well-known/openid-configuration">
+      <span class="pill gray">API · Discovery</span>
+      <div class="icon">📡</div>
+      <div class="title-zh">OIDC Discovery</div>
+      <div class="title-en">/.well-known/openid-configuration</div>
+      <div class="desc-zh">
+        OIDC 标准发现端点,列出 issuer、authorize / token / userinfo / jwks 等所有路径。
+      </div>
+      <div class="desc-en">
+        Standard OIDC discovery endpoint listing issuer + all auth flow URIs.
+      </div>
+      <div class="url">gateway.tden.network/.well-known/openid-configuration</div>
+    </a>
+
+    <a class="card" href="https://gateway.tden.network/oauth/jwks">
+      <span class="pill gray">API · JWKS</span>
+      <div class="icon">🔑</div>
+      <div class="title-zh">公钥集合 / JWKS</div>
+      <div class="title-en">/oauth/jwks</div>
+      <div class="desc-zh">
+        网关 Ed25519 签名公钥(JWK 格式),用于验证 ID Token 和访问回执。
+      </div>
+      <div class="desc-en">
+        Gateway's Ed25519 signing public keys (JWK format) — used to verify
+        ID tokens and access receipts.
+      </div>
+      <div class="url">gateway.tden.network/oauth/jwks</div>
+    </a>
+
+    <a class="card" href="https://gateway.tden.network/api/scenepackages">
+      <span class="pill gray">API · Packages</span>
+      <div class="icon">📦</div>
+      <div class="title-zh">已批准场景包列表</div>
+      <div class="title-en">/api/scenepackages</div>
+      <div class="desc-zh">
+        所有审核通过、可被第三方引用的 OIDC 场景包(JSON)。
+      </div>
+      <div class="desc-en">
+        All approved scene packages available for OIDC scope reference (JSON).
+      </div>
+      <div class="url">gateway.tden.network/api/scenepackages</div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ── 2. 移动 / 桌面应用(说明 + 仓库,不可点直接打开) ──────────────────────── -->
+<section>
+  <h2>
+    <span class="emoji">📱</span>
+    <span class="zh">移动 / 桌面应用</span>
+    <span class="en">Mobile &amp; desktop apps — install instructions + source</span>
+  </h2>
+
+  <div class="grid grid-5">
+
+    <div class="info-card">
+      <span class="pill green">Android · APK</span>
+      <div class="icon">📱</div>
+      <div class="title-zh">TDEN Mobile</div>
+      <div class="title-en">React Native 0.75</div>
+      <div class="desc-zh">
+        日常用户主端。本机人脸 / 眼区登录、链上身份金库、访问审计、
+        OIDC 同意页。当前版本 <b>2.7.0</b>。
+      </div>
+      <div class="desc-en">
+        Primary user client. Local face/periocular auth, on-chain identity
+        vault, access receipts, OIDC consent. Current 2.7.0.
+      </div>
+      <a class="repo-link" href="https://github.com/sunbird84/tden-mobile">→ github.com/sunbird84/tden-mobile</a>
+    </div>
+
+    <div class="info-card">
+      <span class="pill purple">Windows · Tauri 2</span>
+      <div class="icon">🖥️</div>
+      <div class="title-zh">TDEN Desktop</div>
+      <div class="title-en">Daily-use desktop client</div>
+      <div class="desc-zh">
+        镜像 mobile 五个 tab,JWT 用 Windows DPAPI 加密落盘,
+        关窗驻留托盘。NSIS 安装包 13 MB。
+      </div>
+      <div class="desc-en">
+        Mirrors mobile's five tabs. JWT stored via Windows DPAPI; system tray
+        resident. 13 MB NSIS installer.
+      </div>
+      <a class="repo-link" href="https://github.com/sunbird84/tden-desktop">→ github.com/sunbird84/tden-desktop</a>
+    </div>
+
+    <div class="info-card">
+      <span class="pill cyan">Operator · Tauri 2</span>
+      <div class="icon">🏛️</div>
+      <div class="title-zh">Validator Console</div>
+      <div class="title-en">Node operator console</div>
+      <div class="desc-zh">
+        SIN 节点运维:多节点轮询监控、reviewer 队列、(Phase B)治理投票签名、
+        SSH 远程节点重启。
+      </div>
+      <div class="desc-en">
+        Multi-node polling, reviewer queue. Phase B will add governance
+        signing &amp; SSH-driven node ops.
+      </div>
+      <a class="repo-link" href="https://github.com/sunbird84/tden-validator-console">→ github.com/sunbird84/tden-validator-console</a>
+    </div>
+
+    <div class="info-card">
+      <span class="pill amber">Worker · Tauri 2</span>
+      <div class="icon">⚡</div>
+      <div class="title-zh">Compute Worker</div>
+      <div class="title-en">GPU/CPU 算力贡献端</div>
+      <div class="desc-zh">
+        把闲置 GPU/CPU 接给 SIN 节点跑联邦学习/推理 → 换 token。
+        硬件扫描已就绪;Phase B 上 worker 守护。
+      </div>
+      <div class="desc-en">
+        Donate spare GPU/CPU to SIN compute pool, earn tokens. Hardware
+        scan ready; daemon Phase B.
+      </div>
+      <a class="repo-link" href="https://github.com/sunbird84/tden-compute-worker">→ github.com/sunbird84/tden-compute-worker</a>
+    </div>
+
+    <div class="info-card">
+      <span class="pill gray">Developer · Tauri 2</span>
+      <div class="icon">🛠️</div>
+      <div class="title-zh">RP Toolkit</div>
+      <div class="title-en">Third-party integrator workbench</div>
+      <div class="desc-zh">
+        场景包可视化设计器(12 标准字段、敏感度自动检测)、Skills 包浏览、
+        (Phase B)本地 OAuth proxy。
+      </div>
+      <div class="desc-en">
+        Scene-package visual designer + Skills marketplace + (Phase B) local
+        OAuth proxy on :8090.
+      </div>
+      <a class="repo-link" href="https://github.com/sunbird84/tden-rp-toolkit">→ github.com/sunbird84/tden-rp-toolkit</a>
+    </div>
+
+  </div>
+
+  <p style="margin-top:18px; font-size:13px; color:var(--fg-4); line-height:1.6">
+    👉 编译好的安装包在仓库 <code>test-rls/A2.7/</code> 子目录下。
+    Windows 首次启动会有 SmartScreen 警告(还没买 EV 代码签名证书),
+    点"更多信息"→"仍要运行"。Android 需要打开"未知来源"安装。
+    <br>
+    <span style="color:var(--fg-4); font-style:italic; opacity:0.85">
+      Pre-built binaries live in <code>test-rls/A2.7/</code>. Windows SmartScreen will warn (no EV cert yet) — choose "More info → Run anyway". Android requires "Install unknown apps" permission.
+    </span>
+  </p>
+</section>
+
+<!-- ── 3. 系统流程图 ────────────────────────────────────────────────────────── -->
+<section>
+  <h2>
+    <span class="emoji">🔁</span>
+    <span class="zh">系统流程图</span>
+    <span class="en">System architecture &amp; data flow</span>
+  </h2>
+
+  <div class="diagram-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" font-size="13">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#9CA3AF"/>
+        </marker>
+        <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981"/>
+        </marker>
+        <marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#A855F7"/>
+        </marker>
+        <linearGradient id="gradUser" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1E3A8A"/>
+          <stop offset="1" stop-color="#1E40AF"/>
+        </linearGradient>
+        <linearGradient id="gradGW" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5B21B6"/>
+          <stop offset="1" stop-color="#6D28D9"/>
+        </linearGradient>
+        <linearGradient id="gradChain" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0E7490"/>
+          <stop offset="1" stop-color="#0891B2"/>
+        </linearGradient>
+        <linearGradient id="gradRP" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9A3412"/>
+          <stop offset="1" stop-color="#C2410C"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Background grid -->
+      <rect x="0" y="0" width="1000" height="620" fill="none"/>
+
+      <!-- Top row: USERS / CLIENTS -->
+      <g>
+        <text x="80" y="34" fill="#9CA3AF" font-size="11" font-weight="700" letter-spacing="1.5">CLIENTS · 客户端</text>
+
+        <!-- Mobile -->
+        <rect x="60" y="48" width="150" height="78" rx="10" fill="url(#gradUser)" stroke="#3B82F6" stroke-width="1"/>
+        <text x="135" y="76" fill="#fff" text-anchor="middle" font-size="22">📱</text>
+        <text x="135" y="100" fill="#fff" text-anchor="middle" font-weight="600">Mobile</text>
+        <text x="135" y="118" fill="#BFDBFE" text-anchor="middle" font-size="11">React Native 0.75</text>
+
+        <!-- Web -->
+        <rect x="230" y="48" width="150" height="78" rx="10" fill="url(#gradUser)" stroke="#3B82F6" stroke-width="1"/>
+        <text x="305" y="76" fill="#fff" text-anchor="middle" font-size="22">🌐</text>
+        <text x="305" y="100" fill="#fff" text-anchor="middle" font-weight="600">Web App</text>
+        <text x="305" y="118" fill="#BFDBFE" text-anchor="middle" font-size="11">React + Vite</text>
+
+        <!-- Desktop -->
+        <rect x="400" y="48" width="150" height="78" rx="10" fill="url(#gradUser)" stroke="#3B82F6" stroke-width="1"/>
+        <text x="475" y="76" fill="#fff" text-anchor="middle" font-size="22">🖥️</text>
+        <text x="475" y="100" fill="#fff" text-anchor="middle" font-weight="600">Desktop ×4</text>
+        <text x="475" y="118" fill="#BFDBFE" text-anchor="middle" font-size="11">Tauri 2</text>
+
+        <!-- 3rd-party RPs -->
+        <rect x="700" y="48" width="220" height="78" rx="10" fill="url(#gradRP)" stroke="#F97316" stroke-width="1"/>
+        <text x="810" y="76" fill="#fff" text-anchor="middle" font-size="22">🏢</text>
+        <text x="810" y="100" fill="#fff" text-anchor="middle" font-weight="600">3rd-Party RPs · 第三方</text>
+        <text x="810" y="118" fill="#FED7AA" text-anchor="middle" font-size="11">via OIDC + scene packages</text>
+      </g>
+
+      <!-- Arrows from clients down to gateway -->
+      <line x1="135" y1="126" x2="280" y2="220" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="305" y1="126" x2="335" y2="220" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="475" y1="126" x2="390" y2="220" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="810" y1="126" x2="650" y2="220" stroke="#F97316" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <text x="190" y="170" fill="#9CA3AF" font-size="10">HTTPS</text>
+      <text x="730" y="170" fill="#F97316" font-size="10">OIDC OAuth2</text>
+
+      <!-- Middle: GATEWAY -->
+      <g>
+        <text x="80" y="206" fill="#9CA3AF" font-size="11" font-weight="700" letter-spacing="1.5">GATEWAY · 网关</text>
+
+        <rect x="240" y="220" width="420" height="120" rx="10" fill="url(#gradGW)" stroke="#A855F7" stroke-width="1.2"/>
+        <text x="450" y="246" fill="#fff" text-anchor="middle" font-weight="700" font-size="15">tden-gateway · gateway.tden.network</text>
+        <text x="450" y="264" fill="#E9D5FF" text-anchor="middle" font-size="11">Go · OIDC IdP · REST · Phase A2.7</text>
+
+        <!-- Sub-blocks within gateway -->
+        <rect x="256" y="278" width="90" height="48" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+        <text x="301" y="297" fill="#fff" text-anchor="middle" font-size="11" font-weight="600">Identity</text>
+        <text x="301" y="313" fill="#E9D5FF" text-anchor="middle" font-size="9">人脸 / DID / JWT</text>
+
+        <rect x="354" y="278" width="90" height="48" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+        <text x="399" y="297" fill="#fff" text-anchor="middle" font-size="11" font-weight="600">ScenePkg</text>
+        <text x="399" y="313" fill="#E9D5FF" text-anchor="middle" font-size="9">OIDC + 同意</text>
+
+        <rect x="452" y="278" width="90" height="48" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+        <text x="497" y="297" fill="#fff" text-anchor="middle" font-size="11" font-weight="600">Receipts</text>
+        <text x="497" y="313" fill="#E9D5FF" text-anchor="middle" font-size="9">Ed25519 签</text>
+
+        <rect x="550" y="278" width="90" height="48" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+        <text x="595" y="297" fill="#fff" text-anchor="middle" font-size="11" font-weight="600">Webhook</text>
+        <text x="595" y="313" fill="#E9D5FF" text-anchor="middle" font-size="9">HMAC + 重试</text>
+      </g>
+
+      <!-- Side modules -->
+      <g>
+        <text x="80" y="380" fill="#9CA3AF" font-size="11" font-weight="700" letter-spacing="1.5">BACKEND · 后端</text>
+
+        <rect x="40" y="394" width="160" height="80" rx="10" fill="rgba(16,185,129,0.10)" stroke="#10B981" stroke-width="1"/>
+        <text x="120" y="420" fill="#fff" text-anchor="middle" font-size="20">🔍</text>
+        <text x="120" y="442" fill="#fff" text-anchor="middle" font-weight="600" font-size="12">Face Service</text>
+        <text x="120" y="458" fill="#A7F3D0" text-anchor="middle" font-size="10">人脸/眼区识别</text>
+
+        <rect x="220" y="394" width="160" height="80" rx="10" fill="rgba(245,158,11,0.10)" stroke="#F59E0B" stroke-width="1"/>
+        <text x="300" y="420" fill="#fff" text-anchor="middle" font-size="20">🧠</text>
+        <text x="300" y="442" fill="#fff" text-anchor="middle" font-weight="600" font-size="12">FL Server</text>
+        <text x="300" y="458" fill="#FCD34D" text-anchor="middle" font-size="10">联邦学习聚合</text>
+
+        <rect x="400" y="394" width="160" height="80" rx="10" fill="rgba(239,68,68,0.10)" stroke="#EF4444" stroke-width="1"/>
+        <text x="480" y="420" fill="#fff" text-anchor="middle" font-size="20">⚡</text>
+        <text x="480" y="442" fill="#fff" text-anchor="middle" font-weight="600" font-size="12">Compute Pool</text>
+        <text x="480" y="458" fill="#FECACA" text-anchor="middle" font-size="10">众包 GPU/CPU</text>
+
+        <rect x="580" y="394" width="160" height="80" rx="10" fill="rgba(168,85,247,0.10)" stroke="#A855F7" stroke-width="1"/>
+        <text x="660" y="420" fill="#fff" text-anchor="middle" font-size="20">🤖</text>
+        <text x="660" y="442" fill="#fff" text-anchor="middle" font-weight="600" font-size="12">Miner AI</text>
+        <text x="660" y="458" fill="#E9D5FF" text-anchor="middle" font-size="10">大模型自助助理</text>
+
+        <rect x="760" y="394" width="200" height="80" rx="10" fill="rgba(6,182,212,0.10)" stroke="#06B6D4" stroke-width="1"/>
+        <text x="860" y="420" fill="#fff" text-anchor="middle" font-size="20">🛡️</text>
+        <text x="860" y="442" fill="#fff" text-anchor="middle" font-weight="600" font-size="12">Identity Vault (本地)</text>
+        <text x="860" y="458" fill="#A5F3FC" text-anchor="middle" font-size="10">本机 Argon2 + AES-GCM</text>
+      </g>
+
+      <line x1="370" y1="340" x2="200" y2="394" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="3,3"/>
+      <line x1="420" y1="340" x2="380" y2="394" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="3,3"/>
+      <line x1="480" y1="340" x2="500" y2="394" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="3,3"/>
+      <line x1="540" y1="340" x2="640" y2="394" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="3,3"/>
+      <path d="M 135 126 Q 135 220 860 394" stroke="#06B6D4" stroke-width="1.2" fill="none" stroke-dasharray="2,4" marker-end="url(#arr)"/>
+      <text x="565" y="280" fill="#06B6D4" font-size="9" font-style="italic">本地金库 / local vault</text>
+
+      <!-- Bottom: CHAIN -->
+      <g>
+        <text x="80" y="510" fill="#9CA3AF" font-size="11" font-weight="700" letter-spacing="1.5">BLOCKCHAIN · 主权身份网络</text>
+
+        <rect x="200" y="524" width="600" height="74" rx="10" fill="url(#gradChain)" stroke="#06B6D4" stroke-width="1.2"/>
+        <text x="500" y="550" fill="#fff" text-anchor="middle" font-weight="700" font-size="15">tden-chain · Cosmos SDK 0.50 + CometBFT</text>
+        <text x="500" y="570" fill="#A5F3FC" text-anchor="middle" font-size="11">x/identity · x/scenepackage · x/federation · x/authorization · x/asset · x/bequest · x/token</text>
+        <text x="500" y="586" fill="#A5F3FC" text-anchor="middle" font-size="10">CN-SIN ⇋ US-SIN ⇋ JP-SIN  ─  跨主权显式信任边</text>
+      </g>
+
+      <line x1="400" y1="340" x2="400" y2="524" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrG)"/>
+      <line x1="500" y1="340" x2="500" y2="524" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrG)"/>
+      <text x="430" y="430" fill="#10B981" font-size="10" font-style="italic">tx broadcast</text>
+
+    </svg>
+
+    <div class="diagram-caption">
+      <p><b>读法 / How to read:</b> 上层是<b>客户端</b>(用户的手机/电脑/桌面端 app + 第三方 RP),
+      中层是 <b>tden-gateway</b>(单一对外 HTTPS 入口,把 OIDC、身份、场景包、回执、Webhook 集中处理),
+      下层左边是<b>专用后端服务</b>(人脸识别、联邦学习聚合、众包计算、AI 助手、本地身份金库),
+      最下层是 <b>tden-chain</b>(Cosmos SDK 区块链,把关键操作锚定上链;多 SIN 间靠链上 federation 模块互联)。</p>
+
+      <p style="margin-top:8px"><b>How it flows:</b> Clients (mobile / web / desktop / 3rd-party RPs) only ever talk to one HTTPS host:
+      the gateway. The gateway dispatches to specialised backends (face service, FL server, compute pool, miner AI) and anchors critical state on the chain.
+      Sovereign Identity Nodes (CN/US/JP) are independent chains linked by explicit on-chain trust edges in the federation module.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4. GitHub 仓库 ─────────────────────────────────────────────────────── -->
+<section>
+  <h2>
+    <span class="emoji">💻</span>
+    <span class="zh">开源仓库</span>
+    <span class="en">14 open-source repositories — AGPL v3</span>
+  </h2>
+
+  <div class="repos">
+    <a class="repo" href="https://github.com/sunbird84/tden-gateway"><span class="name">tden-gateway</span><span class="what">网关 · Go</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-chain"><span class="name">tden-chain</span><span class="what">链节点 · Cosmos SDK</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-web"><span class="name">tden-web</span><span class="what">用户 web · React</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-mobile"><span class="name">tden-mobile</span><span class="what">移动 · React Native</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-desktop"><span class="name">tden-desktop</span><span class="what">桌面 · Tauri 2</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-portal"><span class="name">tden-portal</span><span class="what">开发者门户 · React</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-validator-console"><span class="name">tden-validator-console</span><span class="what">节点运维 · Tauri 2</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-compute-worker"><span class="name">tden-compute-worker</span><span class="what">算力贡献 · Tauri 2</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-rp-toolkit"><span class="name">tden-rp-toolkit</span><span class="what">第三方接入 · Tauri 2</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-sdk-js"><span class="name">tden-sdk-js</span><span class="what">JS SDK · npm</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-sdk-go"><span class="name">tden-sdk-go</span><span class="what">Go SDK · go.mod</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-skills"><span class="name">tden-skills</span><span class="what">Skills 包市场 · JSON</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-spec"><span class="name">tden-spec</span><span class="what">规格 · Markdown</span></a>
+    <a class="repo" href="https://github.com/sunbird84/tden-deploy"><span class="name">tden-deploy</span><span class="what">部署 · scripts</span></a>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <p>
+    TDEN © 2026 · <b>福清市聪敏技术创新有限公司</b> · 法定代表人 王少敏 · 开源协议 AGPL v3
+    <br>
+    Made by 王少敏 + Claude Opus 4.7 · alpha,Phase A2.7
+  </p>
+  <p style="margin-top:14px">
+    📧 <a href="mailto:bucktouch@gmail.com">bucktouch@gmail.com</a> ·
+    📖 <a href="/portal/">开发者门户</a> ·
+    🚀 <a href="/app/">立即体验</a>
+  </p>
+  <p style="margin-top:18px; font-size:11px; color:var(--fg-4); opacity:0.85">
+    本页是 TDEN 项目门面,所有指向的链接都是真实可用的 ── web 入口直接打开,移动/桌面端先看仓库 README + 编译产物。
+    <br>
+    This is the canonical TDEN landing page — all links go somewhere real. Web entries open in-browser; native apps point to source + binaries.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
